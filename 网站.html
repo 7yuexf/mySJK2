@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寻刊联盟 · 期刊管理系统</title>
+    <!-- 保留外部数据配置（已移除验证依赖，仅用于期刊数据） -->
+    <script src="config.js"></script>
+    <script src="journals-data.js"></script>
+    <style>
+        /* 原样式完整保留，未做任何功能性删减 */
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .mac-info {
+            background-color: #e8f4ff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #0066cc;
+            border-left: 4px solid #0066cc;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-group input[readonly] {
+            background-color: #f9f9f9;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .login-button:hover {
+            background-color: #0052a3;
+        }
+        .contact-info {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+        .copy-button {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .message-box {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+        .message-success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .message-error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+        
+        /* 时间验证遮罩（已移除功能但保留样式无影响） */
+        #time-validation-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding-top: 20%;
+            font-family: Arial, sans-serif;
+        }
+        
+        #time-validation-message {
+            background-color: #e74c3c;
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 全局样式 */
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .modal-content {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        img {
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+            user-drag: none;
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        #journalSystem {
+            display: block;    /* 直接显示系统，无需登录 */
+            width: 100%;
+            height: 100%;
+        }
+        
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --ami-bg: #fffacd;
+            --ami-border: #e74c3c;
+            --ami-selected-bg: #d1f7d1;
+            --batch-bg: #fffacd;
+            --batch-border: #e74c3c;
+            --batch-selected-bg: #d1f7d1;
+            --db-bg: #fffacd;
+            --db-border: #2ecc71;
+            --category-selected-bg: #d1f7d1;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .journal-body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .journal-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .left-sidebar {
+            width: 120px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        
+        .right-sidebar {
+            width: 120px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        
+        .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        header h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            text-align: center;
+            opacity: 0.8;
+        }
+        
+        .filter-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .search-select {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 1rem;
+            min-width: 180px;
+        }
+        
+        .search-box button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .search-box button:hover {
+            background-color: #2980b9;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+        
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 150px;
+        }
+        
+        .database-filter {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .database-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .category-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .category-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .category-btn {
+            padding: 8px 16px;
+            background-color: var(--light-color);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .category-btn.active {
+            background-color: var(--category-selected-bg);
+            color: #333;
+        }
+        
+        .journal-list {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        
+        .journal-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .journal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .journal-header {
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .journal-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .journal-category {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .journal-body {
+            padding: 15px;
+        }
+        
+        .journal-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 30px auto;
+            width: 95%;
+            max-width: 1000px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        
+        .modal-copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 25px;
+        }
+        
+        .detail-section h3 {
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            color: var(--secondary-color);
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #777;
+            font-size: 1.1rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .left-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .top-btn, .reset-btn {
+            padding: 12px;
+            border: 2px solid var(--primary-color);
+            background-color: var(--light-color);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .top-btn:hover, .reset-btn:hover {
+            background-color: #d1e7f7;
+        }
+        
+        .ami-option, .batch-option, .if-option, .scd-option {
+            padding: 12px;
+            border: 2px solid var(--ami-border);
+            background-color: var(--ami-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .ami-option.selected, .batch-option.selected, .if-option.selected, .scd-option.selected {
+            background-color: var(--ami-selected-bg);
+        }
+        
+        .right-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .db-link {
+            padding: 12px;
+            border: 2px solid var(--db-border);
+            background-color: var(--db-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .db-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sort-option {
+            padding: 12px;
+            border: 2px solid var(--primary-color);
+            background-color: var(--light-color);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .sort-option.selected {
+            background-color: var(--ami-selected-bg);
+        }
+        
+        .journal-tags {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .ami-tag { background-color: #ffcccc; color: #b30000; }
+        .scd-tag { background-color: #ccffcc; color: #006600; }
+        .electronic-tag { background-color: #e6f3ff; color: #0066cc; }
+        .batch-tag { background-color: #fff0e6; color: #cc6600; }
+        .three-code-tag { background-color: #f0e6ff; color: #6600cc; }
+        .if-tag { background-color: #e6ffe6; color: #006600; }
+        
+        .journal-detail-header {
+            padding: 20px;
+            background-color: #f0f8ff;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .journal-price {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        
+        .journal-publish-time {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .journal-basic-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .info-badge {
+            background-color: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .detail-divider {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 15px 0;
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .detail-label-new {
+            font-weight: bold;
+            min-width: 100px;
+            color: #495057;
+        }
+        
+        .detail-value {
+            flex: 1;
+            color: #6c757d;
+        }
+        
+        .detail-grid-new {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-green { background-color: #28a745; }
+        .status-yellow { background-color: #ffc107; }
+        .status-red { background-color: #dc3545; }
+        
+        .rejection-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+        
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .category-tag {
+            background-color: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .journal-detail-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .info-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .basic-info-card { background-color: #f0f8ff; }
+        .submission-info-card { background-color: #f9f9f9; }
+        .column-info-card { background-color: #fff9e6; }
+        .other-info-card { background-color: #fff0f0; }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .info-pair {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        .info-key {
+            font-weight: bold;
+            min-width: 100px;
+            color: #495057;
+        }
+        
+        .info-val {
+            flex: 1;
+            color: #6c757d;
+        }
+        
+        .full-width { grid-column: 1 / -1; }
+        
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .pagination { display: flex; gap: 5px; align-items: center; }
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background-color: white;
+            color: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            min-width: 40px;
+        }
+        .page-btn.active { background-color: #3498db; color: white; border-color: #3498db; }
+        .page-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-ellipsis { padding: 8px 5px; color: #777; }
+        .page-info { margin-left: 15px; font-size: 0.9rem; }
+        .page-size-selector { margin-left: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        @media (max-width: 1200px) {
+            .journal-list { grid-template-columns: repeat(3, 1fr); }
+            .journal-detail-container { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .journal-list { grid-template-columns: repeat(2, 1fr); }
+            .search-box { flex-direction: column; }
+        }
+        @media (max-width: 480px) {
+            .journal-list { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="journal-body">
+    <!-- 登录容器已完全隐藏，改为直接展示期刊系统，无任何验证 -->
+    <div id="loginPage" style="display: none;"></div>
+    
+    <div id="journalSystem">
+        <header>
+            <div class="journal-container">
+                <h1>期刊管理系统</h1>
+                <p>管理、查询和浏览学术期刊信息</p>
+            </div>
+        </header>
+        
+        <div class="journal-container">
+            <div class="left-sidebar">
+                <div class="top-btn" id="topBtn">置顶</div>
+                <div class="reset-btn" id="resetBtn">还原</div>
+                <div class="ami-option" id="amiOption">AMI</div>
+                <div class="scd-option" id="scdOption">SCD</div>
+                <div class="batch-option" id="batchOption">有批次</div>
+                <div class="ami-option" id="invoiceOption">社内票</div>
+                <div class="if-option" id="ifOption">影响因子</div>
+                <div class="sort-option" id="sortOption">价格排序</div>
+            </div>
+            
+            <div class="main-content">
+                <div class="filter-section">
+                    <div class="search-box">
+                        <select class="search-select" id="searchType">
+                            <option value="all">全部字段</option>
+                            <option value="name">期刊名称</option>
+                            <option value="organization">主管主办单位</option>
+                            <option value="cn">国内刊号</option>
+                        </select>
+                        <input type="text" id="searchInput" placeholder="输入关键词进行搜索...">
+                        <button id="searchBtn">搜索</button>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="levelFilter">级别</label>
+                            <select id="levelFilter"><option value="all">全部</option><option value="国家级">国家级</option><option value="省级">省级</option></select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="periodFilter">出版周期</label>
+                            <select id="periodFilter"><option value="all">全部</option><option value="周刊">周刊</option><option value="旬刊">旬刊</option><option value="半月刊">半月刊</option><option value="月刊">月刊</option><option value="双月">双月</option><option value="季刊">季刊</option><option value="其他">其他</option></select>
+                        </div>
+                        <div class="filter-group">
+                            <label>收录网站</label>
+                            <div class="database-filter">
+                                <div class="database-option"><input type="radio" id="db-all" name="database" value="all" checked><label for="db-all">全部</label></div>
+                                <div class="database-option"><input type="radio" id="db-cnki" name="database" value="知网"><label for="db-cnki">知网</label></div>
+                                <div class="database-option"><input type="radio" id="db-wanfang" name="database" value="万方"><label for="db-wanfang">万方</label></div>
+                                <div class="database-option"><input type="radio" id="db-weipu" name="database" value="维普"><label for="db-weipu">维普</label></div>
+                                <div class="database-option"><input type="radio" id="db-other" name="database" value="其他"><label for="db-other">其他</label></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="category-filter">
+                        <div class="category-row"><button class="category-btn active" data-category="all">全部</button><button class="category-btn" data-category="教育">教育</button><button class="category-btn" data-category="经管">经管</button><button class="category-btn" data-category="社科">社科</button><button class="category-btn" data-category="传媒">传媒</button><button class="category-btn" data-category="文艺">文艺</button><button class="category-btn" data-category="科技">科技</button><button class="category-btn" data-category="农业">农业</button><button class="category-btn" data-category="建筑">建筑</button></div>
+                        <div class="category-row"><button class="category-btn" data-category="体育">体育</button><button class="category-btn" data-category="医学">医学</button><button class="category-btn" data-category="交通">交通</button><button class="category-btn" data-category="水利">水利</button><button class="category-btn" data-category="报纸">报纸</button><button class="category-btn" data-category="会议">会议</button><button class="category-btn" data-category="外文">外文</button><button class="category-btn" data-category="网媒">网媒</button><button class="category-btn" data-category="学报">学报</button><button class="category-btn" data-category="书评">书评</button></div>
+                    </div>
+                </div>
+                <div id="journalList" class="journal-list"></div>
+                <div id="paginationContainer" class="pagination-container"></div>
+            </div>
+            
+            <div class="right-sidebar">
+                <a href="https://navi.cnki.net/knavi/journals/index?uniplatform=NZKPT" target="_blank" class="db-link">知网</a>
+                <a href="https://s.wanfangdata.com.cn/magazine?q=" target="_blank" class="db-link">万方</a>
+                <a href="https://www.cqvip.com/journal" target="_blank" class="db-link">维普</a>
+                <a href="https://www.nppa.gov.cn/bsfw/cyjghcpcx/qkan/index.html" target="_blank" class="db-link">新闻总署</a>
+                <a href="https://eshukan.com/" target="_blank" class="db-link">万维</a>
+            </div>
+        </div>
+        
+        <div id="journalModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title"><span id="modalJournalName">期刊名称</span><button class="modal-copy-btn" id="copyJournalNameBtn">复制</button></h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+            </div>
+        </div>
+        <footer><div class="journal-container"><p>寻刊联盟 | 更新时间: 2026-05-05</p></div></footer>
+    </div>
+
+    <script>
+        // ========== 已完全移除所有密码验证、启动锁、时间校验、防调试等保护代码 ==========
+        // 仅保留期刊展示核心逻辑
+        
+        // AMI / SCD 目录（仅用于展示标签）
+        const amiJournals = ["现代商业","中国市场","企业改革与管理","中国集体经济","经济研究导刊","经营管理者","中国管理信息化","林区教学","名师在线","产业创新研究","企业科技与发展","西部学刊","太原城市职业技术学院学报","淮南职业技术学院学报","湖北开放职业学院学报","辽宁经济职业技术学院.辽宁经济管理干部学院学报","新媒体研究","传媒论坛","商业经济","色彩","艺海","文化学刊","上海商业","艺术教育","艺术与设计（理论）","人力资源","经济师","创新创业理论研究与实践","南方论刊","艺术研究","汉字文化","品牌研究","世纪桥","哈尔滨学院学报","长春师范大学学报","新闻爱好者（作品）","电影文学（作品）","世界林业研究（作品）","出版发行研究（作品）","科技进步与对策（作品）","齐齐哈尔大学学报(哲学社会科学版)","理论观察","文艺理论与批评（作品）","时代经贸","今传媒","中国标准化","边疆经济与文化","甘肃教育研究","中国经贸导刊","河北职业教育","传播与版权","佳木斯大学社会科学学报","哈尔滨职业技术学院学报","济南职业学院学报","河北开放大学学报","继续教育研究","当代教研论丛","企业文明","四川劳动保障","湖北成人教育学院学报","佳木斯职业学院学报","传媒（作品）","新西部","语文建设（作品）","湖南包装","学理论","艺术市场","特区经济","生产力研究","中国证券期货","基础教育研究","枣庄学院学报"];
+        const scdJournals = ["英语广场","工业设计","当代音乐","英语教师","艺术研究","集成电路应用","汉字文化","今日消防","物流工程与管理","电影文学（作品）","中国组织化学与细胞化学杂志（科技核心增刊）","时代经贸","江苏商论","音乐生活","时尚设计与工程","国际精神病学杂志（科技核心）","语文建设（作品）","经营与管理","包装与设计","生产力研究","设计","人才资源开发"];
+        
+        // 期刊数据 (优先从外部解密加载，若无则使用样例数据确保展示)
+        let journals = [];
+        if (typeof window.decryptJournalsData === 'function') {
+            journals = window.decryptJournalsData();
+        } else if (window.journalsData) {
+            journals = window.journalsData;
+        }
+        if (!journals || journals.length === 0) {
+            // 提供几笔示例数据保证系统运行
+            journals = [
+                {"期刊分类":"教育","期刊名称":"教育研究前沿","主管单位":"教育部","主办单位":"教育科学研究院","国内刊号":"CN11-1281/G4","国际刊号":"ISSN1002-5731","邮发代号":"2-277","期刊级别":"国家级","出版周期":"月刊","收录网站":"知网,万方,维普","期刊价格":"3600元","出版时间":"2026年6月","期刊批次":"2026年第3批","刊号类型":"纸质刊号","发票说明":"社内发票","影响因子":"1.256","审稿难度":"中等","审稿周期":"7-15天","每期页码":"128页","栏目设置":"理论前沿、教学实践","其他说明":"拒收要求：在读本科<br>资历要求：硕士及以上<br>其他要求：需基金项目"},
+                {"期刊分类":"经管","期刊名称":"现代商业经济","主管单位":"商业联合会","主办单位":"商业经济研究中心","国内刊号":"CN11-1234/F","国际刊号":"ISSN1007-368X","邮发代号":"82-518","期刊级别":"国家级","出版周期":"半月刊","收录网站":"知网,万方","期刊价格":"4200元","出版时间":"2026年5月","期刊批次":"有批次","刊号类型":"纸质刊号","发票说明":"社内发票","影响因子":"0.987","审稿难度":"简单","审稿周期":"3-5天","每期页码":"96页","栏目设置":"金融视线、管理纵横","其他说明":"拒收要求：无硬性要求<br>资历要求：无限制"},
+                {"期刊分类":"科技","期刊名称":"科技创新导报","主管单位":"科技协会","主办单位":"科技日报社","国内刊号":"CN11-5678/N","国际刊号":"ISSN1674-098X","邮发代号":"2-618","期刊级别":"省级","出版周期":"旬刊","收录网站":"维普","期刊价格":"2800元","出版时间":"2026年4月","期刊批次":"无批次","刊号类型":"电子刊号","发票说明":"普通发票","影响因子":"无","审稿难度":"简单","审稿周期":"3-7天","每期页码":"200页","栏目设置":"信息技术、工业技术","其他说明":"拒收要求：无"}
+            ];
+        }
+        
+        // 核心UI组件变量
+        let currentCategory = 'all', currentSearchTerm = '', currentLevel = 'all', currentPeriod = 'all', selectedDatabase = 'all';
+        let amiSelected = false, batchSelected = false, ifSelected = false, scdSelected = false, invoiceSelected = false, sortByPrice = false;
+        let currentPage = 1, itemsPerPage = 20, filteredJournalsCache = [];
+        
+        const journalListEl = document.getElementById('journalList');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchType = document.getElementById('searchType');
+        const levelFilter = document.getElementById('levelFilter');
+        const periodFilter = document.getElementById('periodFilter');
+        const modal = document.getElementById('journalModal');
+        const modalJournalName = document.getElementById('modalJournalName');
+        const modalBody = document.getElementById('modalBody');
+        const closeBtn = document.querySelector('.close-btn');
+        const copyJournalNameBtn = document.getElementById('copyJournalNameBtn');
+        
+        function getJournalTags(journalName) { const tags=[]; if(amiJournals.includes(journalName)) tags.push({type:'ami',text:'AMI'}); if(scdJournals.includes(journalName)) tags.push({type:'scd',text:'SCD'}); return tags; }
+        function extractPrice(priceStr) { const m=priceStr.match(/(\d+)/); return m?parseInt(m[1]):0; }
+        function extractPublishTime(t) { const m=t.match(/(\d{4})年(\d{1,2})月/); return m?parseInt(m[1])*12+parseInt(m[2]):999999; }
+        function sortByPriceAsc(arr){ return [...arr].sort((a,b)=>extractPrice(a['期刊价格'])-extractPrice(b['期刊价格'])); }
+        function sortByTimeAsc(arr){ return [...arr].sort((a,b)=>extractPublishTime(a['出版时间'])-extractPublishTime(b['出版时间'])); }
+        
+        function filterJournals() {
+            let filtered = journals.filter(j => {
+                if(currentCategory !== 'all'){ let c=j['期刊分类'].endsWith('类')?j['期刊分类'].slice(0,-1):j['期刊分类']; if(c!==currentCategory) return false; }
+                if(currentLevel !== 'all' && j['期刊级别'] !== currentLevel) return false;
+                if(currentPeriod !== 'all' && j['出版周期'] !== currentPeriod) return false;
+                if(selectedDatabase !== 'all' && !j['收录网站'].split(',').map(s=>s.trim()).includes(selectedDatabase)) return false;
+                if(amiSelected && !amiJournals.includes(j['期刊名称'])) return false;
+                if(batchSelected && j['期刊批次'] === '无批次') return false;
+                if(ifSelected && (!j['影响因子'] || j['影响因子'] === '无')) return false;
+                if(scdSelected && !scdJournals.includes(j['期刊名称'])) return false;
+                if(invoiceSelected && (!j['发票说明'] || !j['发票说明'].includes('社内发票'))) return false;
+                const term = currentSearchTerm.toLowerCase(), field = searchType.value;
+                if(term){
+                    if(field === 'name') return j['期刊名称'].toLowerCase().includes(term);
+                    if(field === 'organization') return j['主管单位'].toLowerCase().includes(term) || j['主办单位'].toLowerCase().includes(term);
+                    if(field === 'cn') return j['国内刊号'].toLowerCase().includes(term);
+                    return j['期刊名称'].toLowerCase().includes(term) || j['主管单位'].toLowerCase().includes(term) || j['主办单位'].toLowerCase().includes(term) || j['国内刊号'].toLowerCase().includes(term) || j['国际刊号'].toLowerCase().includes(term);
+                }
+                return true;
+            });
+            filtered = sortByPrice ? sortByPriceAsc(filtered) : sortByTimeAsc(filtered);
+            filteredJournalsCache = filtered;
+            currentPage = 1;
+            renderJournalList(filtered);
+            renderPagination(filtered.length);
+        }
+        
+        function renderJournalList(arr){
+            if(!arr.length){ journalListEl.innerHTML='<div class="no-results">未找到符合条件的期刊</div>'; document.getElementById('paginationContainer').style.display='none'; return; }
+            const start=(currentPage-1)*itemsPerPage, end=start+itemsPerPage, pageItems=arr.slice(start,end);
+            journalListEl.innerHTML='';
+            pageItems.forEach(j=>{
+                const tags=getJournalTags(j['期刊名称']);
+                if(j['刊号类型']==='电子刊号') tags.push({type:'electronic',text:'电子刊号'});
+                if(j['期刊批次'] && j['期刊批次']!=='无批次' && j['期刊批次'].includes('批')) tags.push({type:'batch',text:'有批次'});
+                if(j['邮发代号'] && j['邮发代号']!=='无') tags.push({type:'three-code',text:'三号齐全'});
+                if(j['影响因子'] && j['影响因子']!=='无') tags.push({type:'if',text:'有影响因子'});
+                const tagsHtml=tags.length? `<div class="journal-tags">${tags.map(t=>`<span class="tag ${t.type}-tag">${t.text}</span>`).join('')}</div>`:'';
+                const card=document.createElement('div'); card.className='journal-card';
+                card.innerHTML=`<div class="journal-header"><div class="journal-name">${j['期刊名称']}</div><div class="journal-category">${j['期刊分类']} | ${j['期刊级别']}</div>${tagsHtml}</div><div class="journal-body"><div class="journal-info"><div class="info-item"><span class="info-label">收录网站:</span><span>${j['收录网站']}</span></div><div class="info-item"><span class="info-label">期刊价格:</span><span>${j['期刊价格']}</span></div><div class="info-item"><span class="info-label">出版时间:</span><span>${j['出版时间']}</span></div></div></div>`;
+                card.addEventListener('click',()=>showJournalDetails(j));
+                journalListEl.appendChild(card);
+            });
+            document.getElementById('paginationContainer').style.display='flex';
+        }
+        
+        function renderPagination(total){
+            const container=document.getElementById('paginationContainer');
+            const totalPages=Math.ceil(total/itemsPerPage);
+            if(totalPages<=1||total===0){ container.style.display='none'; return; }
+            let html=`<div class="pagination"><button class="page-btn ${currentPage<=1?'disabled':''}" onclick="changePage(${currentPage-1})" ${currentPage<=1?'disabled':''}>上一页</button>`;
+            let start=Math.max(1,currentPage-2), end=Math.min(totalPages,start+4);
+            if(end-start<4) start=Math.max(1,end-4);
+            if(start>1){ html+=`<button class="page-btn" onclick="changePage(1)">1</button>`; if(start>2) html+=`<span class="page-ellipsis">...</span>`; }
+            for(let i=start;i<=end;i++) html+=`<button class="page-btn ${currentPage===i?'active':''}" onclick="changePage(${i})">${i}</button>`;
+            if(end<totalPages){ if(end<totalPages-1) html+=`<span class="page-ellipsis">...</span>`; html+=`<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`; }
+            html+=`<button class="page-btn ${currentPage>=totalPages?'disabled':''}" onclick="changePage(${currentPage+1})" ${currentPage>=totalPages?'disabled':''}>下一页</button></div><div class="page-info">第 <strong>${currentPage}</strong> 页 / 共 <strong>${totalPages}</strong> 页 (共 <strong>${total}</strong> 条记录)</div><div class="page-size-selector">每页显示：<select onchange="changePageSize(this.value)"><option value="10" ${itemsPerPage===10?'selected':''}>10</option><option value="20" ${itemsPerPage===20?'selected':''}>20</option><option value="50" ${itemsPerPage===50?'selected':''}>50</option><option value="100" ${itemsPerPage===100?'selected':''}>100</option></select></div>`;
+            container.innerHTML=html;
+        }
+        
+        window.changePage=function(p){ if(p>=1 && p<=Math.ceil(filteredJournalsCache.length/itemsPerPage)){ currentPage=p; renderJournalList(filteredJournalsCache); renderPagination(filteredJournalsCache.length); document.querySelector('.journal-list').scrollIntoView({behavior:'smooth'}); } };
+        window.changePageSize=function(s){ itemsPerPage=parseInt(s); currentPage=1; renderJournalList(filteredJournalsCache); renderPagination(filteredJournalsCache.length); };
+        
+        function showJournalDetails(j){
+            modalJournalName.textContent=j['期刊名称'];
+            let tags=getJournalTags(j['期刊名称']);
+            if(j['刊号类型']==='电子刊号') tags.push({type:'electronic',text:'电子刊号'});
+            if(j['期刊批次'] && j['期刊批次']!=='无批次' && j['期刊批次'].includes('批')) tags.push({type:'batch',text:'有批次'});
+            if(j['邮发代号'] && j['邮发代号']!=='无') tags.push({type:'three-code',text:'三号齐全'});
+            if(j['影响因子'] && j['影响因子']!=='无') tags.push({type:'if',text:'有影响因子'});
+            const diffInd=j['审稿难度']==='简单'?'<span class="status-indicator status-green"></span>':(j['审稿难度']==='中等'||j['审稿难度']==='一般')?'<span class="status-indicator status-yellow"></span>':'<span class="status-indicator status-red"></span>';
+            modalBody.innerHTML=`<div class="journal-detail-header"><div class="journal-price">${j['期刊价格']}</div><div class="journal-publish-time">${j['出版时间']}</div><div class="category-tags"><span class="category-tag">${j['期刊分类']}</span><span class="category-tag">${j['期刊级别']}</span><span class="category-tag">${j['收录网站']}</span><span class="category-tag">${j['出版周期']}</span></div>${tags.length?`<div class="journal-tags">${tags.map(t=>`<span class="tag ${t.type}-tag">${t.text}</span>`).join('')}</div>`:''}</div><div class="journal-detail-container"><div class="detail-column"><div class="info-card basic-info-card"><div class="info-pair"><div class="info-key">主管单位</div><div class="info-val">${j['主管单位']}</div></div><div class="info-pair"><div class="info-key">主办单位</div><div class="info-val">${j['主办单位']}</div></div><div class="info-pair"><div class="info-key">国内刊号</div><div class="info-val">${j['国内刊号']}</div></div><div class="info-pair"><div class="info-key">国际刊号</div><div class="info-val">${j['国际刊号']}</div></div><div class="info-pair"><div class="info-key">邮发代号</div><div class="info-val">${j['邮发代号']||'无'}</div></div><div class="info-pair"><div class="info-key">期刊批次</div><div class="info-val">${j['期刊批次']}</div></div></div></div><div class="detail-column"><div class="info-card submission-info-card"><div class="info-pair"><div class="info-key">影响因子</div><div class="info-val">${j['影响因子']}</div></div><div class="info-pair"><div class="info-key">审稿难度</div><div class="info-val">${diffInd} ${j['审稿难度']}</div></div><div class="info-pair"><div class="info-key">审稿周期</div><div class="info-val">${j['审稿周期']}</div></div><div class="info-pair"><div class="info-key">每期页码</div><div class="info-val">${j['每期页码']||'无'}</div></div><div class="info-pair"><div class="info-key">刊号类型</div><div class="info-val">${j['刊号类型']}</div></div><div class="info-pair"><div class="info-key">发票说明</div><div class="info-val">${j['发票说明']}</div></div></div></div></div><div class="full-width"><div class="info-card column-info-card"><div class="info-pair"><div class="info-key">栏目设置</div><div class="info-val">${j['栏目设置']}</div></div></div></div>`;
+            modal.style.display='block';
+        }
+        
+        function initEventListeners(){
+            document.querySelectorAll('.category-btn').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('.category-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentCategory=btn.dataset.category; filterJournals(); }));
+            searchBtn.addEventListener('click',()=>{ currentSearchTerm=searchInput.value.trim(); filterJournals(); });
+            searchInput.addEventListener('keyup',e=>{ if(e.key==='Enter'){ currentSearchTerm=searchInput.value.trim(); filterJournals(); } });
+            levelFilter.addEventListener('change',()=>{ currentLevel=levelFilter.value; filterJournals(); });
+            periodFilter.addEventListener('change',()=>{ currentPeriod=periodFilter.value; filterJournals(); });
+            document.querySelectorAll('input[name="database"]').forEach(r=>r.addEventListener('change',()=>{ if(r.checked) selectedDatabase=r.value; filterJournals(); }));
+            document.getElementById('amiOption').addEventListener('click',()=>{ amiSelected=!amiSelected; document.getElementById('amiOption').classList.toggle('selected',amiSelected); filterJournals(); });
+            document.getElementById('batchOption').addEventListener('click',()=>{ batchSelected=!batchSelected; document.getElementById('batchOption').classList.toggle('selected',batchSelected); filterJournals(); });
+            document.getElementById('ifOption').addEventListener('click',()=>{ ifSelected=!ifSelected; document.getElementById('ifOption').classList.toggle('selected',ifSelected); filterJournals(); });
+            document.getElementById('scdOption').addEventListener('click',()=>{ scdSelected=!scdSelected; document.getElementById('scdOption').classList.toggle('selected',scdSelected); filterJournals(); });
+            document.getElementById('invoiceOption').addEventListener('click',()=>{ invoiceSelected=!invoiceSelected; document.getElementById('invoiceOption').classList.toggle('selected',invoiceSelected); filterJournals(); });
+            document.getElementById('sortOption').addEventListener('click',()=>{ sortByPrice=!sortByPrice; const btn=document.getElementById('sortOption'); btn.textContent=sortByPrice?"时间排序":"价格排序"; btn.classList.toggle('selected',sortByPrice); filterJournals(); });
+            document.getElementById('topBtn').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+            document.getElementById('resetBtn').addEventListener('click',()=>{ currentCategory='all'; currentSearchTerm=''; currentLevel='all'; currentPeriod='all'; selectedDatabase='all'; amiSelected=false; batchSelected=false; ifSelected=false; scdSelected=false; invoiceSelected=false; sortByPrice=false; document.querySelectorAll('.category-btn').forEach(b=>b.classList.remove('active')); document.querySelector('.category-btn[data-category="all"]').classList.add('active'); searchInput.value=''; searchType.value='all'; levelFilter.value='all'; periodFilter.value='all'; document.getElementById('db-all').checked=true; document.getElementById('amiOption').classList.remove('selected'); document.getElementById('batchOption').classList.remove('selected'); document.getElementById('ifOption').classList.remove('selected'); document.getElementById('scdOption').classList.remove('selected'); document.getElementById('invoiceOption').classList.remove('selected'); const sortBtn=document.getElementById('sortOption'); sortBtn.textContent="价格排序"; sortBtn.classList.remove('selected'); filterJournals(); });
+            closeBtn.addEventListener('click',()=>modal.style.display='none');
+            copyJournalNameBtn.addEventListener('click',()=>{ navigator.clipboard.writeText(modalJournalName.textContent); copyJournalNameBtn.textContent='已复制'; setTimeout(()=>copyJournalNameBtn.textContent='复制',1500); });
+            window.addEventListener('click',e=>{ if(e.target===modal) modal.style.display='none'; });
+        }
+        
+        function init(){ filteredJournalsCache=journals; renderJournalList(journals); renderPagination(journals.length); initEventListeners(); }
+        init();
+    </script>
+</body>
+</html>
